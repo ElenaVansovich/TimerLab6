@@ -17,8 +17,6 @@ static ssize_t times_store(struct kobject *, struct kobj_attribute *, const char
 
 static void repeat(unsigned long);
 
-
-
 static struct kobj_attribute times_attrb =
     __ATTR(interval, 0664, times_show, times_store);
 
@@ -26,79 +24,86 @@ static struct kobject *times_obj = NULL;
 
 static struct timer_list timer;
 
+
 static ssize_t times_show(struct kobject *kobj, struct kobj_attribute *attr,
                           char *buf)
 {
-    return sprintf(buf, "%lu\n", times);
+    	return sprintf(buf, "%lu\n", times);
 }
 
 static ssize_t times_store(struct kobject *kobj, struct kobj_attribute *attr,
                            const char *buf, size_t count)
 {
-    if (kstrtoul(buf, 10, &times) == -EINVAL) {
-        return -EINVAL;
-    }
+    	if (kstrtoul(buf, 10, &times) == -EINVAL) 
+	{
+        	return -EINVAL;
+    	}
 
-    if (timer_exists) {
-        del_timer(&timer);
-    }
+    	if (timer_exists) 
+	{
+        	del_timer(&timer);
+    	}
 
-    timer_exists = 1;
-    timer.data = times;
-    timer.function = repeat;
-    timer.expires = jiffies + DELAY * HZ;
+    	timer_exists = 1;
+    	timer.data = times;
+    	timer.function = repeat;
+    	timer.expires = jiffies + DELAY * HZ;
 
-    add_timer(&timer);
+    	add_timer(&timer);
 
-    return count;
+    	return count;
 }
 
 static void repeat(unsigned long arg)
 {
-    unsigned long i = 0;
+    	unsigned long i = 0;
 
-    if (!arg) {
-        return;
-    }
+    	if (!arg)
+	{
+        	return;
+    	}
 
-    for (i = 0; i < arg; ++i) {
-        printk(KERN_INFO "%s\n", TEXT);
-    }
+    	for (i = 0; i < arg; ++i) 
+	{
+        	printk(KERN_INFO "%s\n", TEXT);
+    	}
 
-    timer.expires = jiffies + DELAY * HZ;
+    	timer.expires = jiffies + DELAY * HZ;
 
-    add_timer(&timer);
+	add_timer(&timer);
 }
 
 static int __init timer_init()
 {
 
-    init_timer_on_stack(&timer);
+	init_timer_on_stack(&timer);
 
-    times_obj = kobject_create_and_add("timer", NULL);
-    if (!times_obj) {
-        return -ENOMEM;
-    }
+	times_obj = kobject_create_and_add("timer", NULL);
+	if (!times_obj)
+	{
+		return -ENOMEM;
+	}
 
-    if (sysfs_create_file(times_obj, &times_attrb.attr)) {
-        timer_exit();
-        return -EINVAL;
-    }
+    	if (sysfs_create_file(times_obj, &times_attrb.attr))
+	{
+        	timer_exit();
+        	return -EINVAL;
+    	}
 
     return 0;
 }
 
 static void timer_exit()
 {
-    if (timer_exists)
-    {
-        del_timer(&timer);
-    }
-
-    if (times_obj)
+	if (timer_exists)
 	{
-        kobject_put(times_obj);
-    }
+		del_timer(&timer);
+	}
+
+	if (times_obj)
+	{
+		kobject_put(times_obj);
+	}
 }
 
 module_init(timer_init);
